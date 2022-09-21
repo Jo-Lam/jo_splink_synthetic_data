@@ -127,3 +127,77 @@ def full_name_null(formatted_master_record, record_to_modify={}):
     else:
         record_to_modify["full_name"] = None
     return record_to_modify
+
+# error: Swapped first and surname
+def swapped_name_error(formatted_master_record, record_to_modify={}):
+ 
+   options = formatted_master_record["full_name"]
+
+    if options is None:
+        record_to_modify["full_name"] = None
+        return record_to_modify
+
+    full_name = options[0]
+
+    names = full_name.split(" ")
+
+    output_names = []
+    for n in names:
+    n = n.lower()
+        if n[1] == n[2]:
+            pass
+        elif n[1] != n[2]
+            output_names.append(n)
+    
+    record_to_modify["full_name"] = " ".join(output_names[::-1]).lower()
+    return record_to_modify
+
+# error: Random first name (Random non-diminutive first name)
+
+def first_name_random(formatted_master_record, record_to_modify={}):
+    
+    options = formatted_master_record["full_name_arr"]
+
+    if options is None:
+        record_to_modify["full_name"] = None
+        return record_to_modify
+
+    full_name = options[0]
+
+    names = full_name.split(" ")
+
+    output_names = []
+    for n in names:
+        n = n.lower()
+        replace n[0] = random.choice(master_record["humanLabel"])
+
+        output_names.append(n)
+
+    record_to_modify["full_name"] = " ".join(output_names).lower()
+
+    return record_to_modify
+
+#random last name - married/devorced
+
+def last_name_random(formatted_master_record, record_to_modify={}):
+    
+    options = formatted_master_record["full_name_arr"]
+
+    if options is None:
+        record_to_modify["full_name"] = None
+        return record_to_modify
+
+    full_name = options[0]
+
+    names = full_name.split(" ")
+
+    output_names = []
+    for n in names:
+        n = n.lower()
+        replace n[-1] = random.choice(master_record["humanLabel"])
+
+        output_names.append(n)
+
+    record_to_modify["full_name"] = " ".join(output_names).lower()
+
+    return record_to_modify
