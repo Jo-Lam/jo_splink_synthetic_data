@@ -92,3 +92,112 @@ def apply_error_vector(error_vector, formatted_master_record, config):
         output_record = fn(formatted_master_record, record_to_modify=output_record)
 
     return output_record
+
+# Step 0: Group Data into Categories
+# Load in Master data, create 2 new column, recode. [probably best to represent this in a separate page]
+
+# Error introduction (Missing is counted as a type of error)
+# Error DAG: http://dagitty.net/mFAN9cX
+
+# Affiliate Variables: Century of Death (1600s, 1700s, 1800s, 1900s), Ethnicity (White, Black, Multiple Ethnic, Asian, Other)
+# Linkage Variables: First Name, Last Name, Date of Birth, Gender
+
+
+# Retain dependencies between: 
+# Value of Affiliate with Error in Linkage
+# Error in Linkage with Error in Linkage (e.g., People with Errors in First Name are also likely to have Errors in Last Name)
+
+
+### If YoD = 1600s, Error in linkage variable = more likely, Error induction mechanism = Mainly Missing... same logic flows for all linkage variables
+### If Ethnicity =  (White, Black, Multiple, Asian, Other, Missing), Error in 
+
+#First Name
+if col_name = [FirstName]:
+    if ethnic_cat = [White] and CoD = [1600s]:
+        null_probability = 0.1
+        do_nothing_probability = 0.5
+        probability_corrupt = 1 - null_probability - do_nothing_probability
+    elif ethnic_cat = [Black] and CoD = [1600s]:
+        null_probability = 0.1
+        do_nothing_probability = 0.5
+        probability_corrupt = 1 - null_probability - do_nothing_probability
+    elif ethnic_cat = [Multiple] and CoD = [1600s]:
+        null_probability = 0.1
+        do_nothing_probability = 0.5
+        probability_corrupt = 1 - null_probability - do_nothing_probability
+    elif ethnic_cat = [Asian] and CoD = [1600s]:
+        null_probability = 0.1
+        do_nothing_probability = 0.5
+        probability_corrupt = 1 - null_probability - do_nothing_probability
+    elif ethnic_cat = [Other] and CoD = [1600s]:
+        null_probability = 0.1
+        do_nothing_probability = 0.5
+        probability_corrupt = 1 - null_probability - do_nothing_probability
+    elif ethnic_cat = [White] and CoD = [1700s]:
+        null_probability = 0.1
+        do_nothing_probability = 0.5
+        probability_corrupt = 1 - null_probability - do_nothing_probability
+    elif ethnic_cat = [Black] and CoD = [1700s]:
+        null_probability = 0.1
+        do_nothing_probability = 0.5
+        probability_corrupt = 1 - null_probability - do_nothing_probability
+    elif ethnic_cat = [Multiple] and CoD = [1700s]:
+        null_probability = 0.1
+        do_nothing_probability = 0.5
+        probability_corrupt = 1 - null_probability - do_nothing_probability
+    elif ethnic_cat = [Asian] and CoD = [1700s]:
+        null_probability = 0.1
+        do_nothing_probability = 0.5
+        probability_corrupt = 1 - null_probability - do_nothing_probability
+   elif ethnic_cat = [Other] and CoD = [1700s]:
+        null_probability = 0.1
+        do_nothing_probability = 0.5
+        probability_corrupt = 1 - null_probability - do_nothing_probability
+       if ethnic_cat = [White] and CoD = [1800s]:
+        null_probability = 0.1
+        do_nothing_probability = 0.5
+        probability_corrupt = 1 - null_probability - do_nothing_probability
+    elif ethnic_cat = [Black] and CoD = [1800s]:
+        null_probability = 0.1
+        do_nothing_probability = 0.5
+        probability_corrupt = 1 - null_probability - do_nothing_probability
+    elif ethnic_cat = [Multiple] and CoD = [1800s]:
+        null_probability = 0.1
+        do_nothing_probability = 0.5
+        probability_corrupt = 1 - null_probability - do_nothing_probability
+    elif ethnic_cat = [Asian] and CoD = [1800s]:
+        null_probability = 0.1
+        do_nothing_probability = 0.5
+        probability_corrupt = 1 - null_probability - do_nothing_probability
+    elif ethnic_cat = [Other] and CoD = [1800s]:
+        null_probability = 0.1
+        do_nothing_probability = 0.5
+        probability_corrupt = 1 - null_probability - do_nothing_probability
+    elif ethnic_cat = [White] and CoD = [1900s]:
+        null_probability = 0.1
+        do_nothing_probability = 0.5
+        probability_corrupt = 1 - null_probability - do_nothing_probability
+    elif ethnic_cat = [Black] and CoD = [1900s]:
+        null_probability = 0.1
+        do_nothing_probability = 0.5
+        probability_corrupt = 1 - null_probability - do_nothing_probability
+    elif ethnic_cat = [Multiple] and CoD = [1900s]:
+        null_probability = 0.1
+        do_nothing_probability = 0.5
+        probability_corrupt = 1 - null_probability - do_nothing_probability
+    elif ethnic_cat = [Asian] and CoD = [1900s]:
+        null_probability = 0.1
+        do_nothing_probability = 0.5
+        probability_corrupt = 1 - null_probability - do_nothing_probability
+   elif ethnic_cat = [Other] and CoD = [1900s]:
+        null_probability = 0.1
+        do_nothing_probability = 0.5
+        probability_corrupt = 1 - null_probability - do_nothing_probability
+
+#Last Name, Ethnic and CoD Values + First Name Errors (3 conditions, combination of 5 X 4 X 2)
+if col_name = last_name:
+    
+
+    
+    
+ 
