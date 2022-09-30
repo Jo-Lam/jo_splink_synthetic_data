@@ -13,13 +13,31 @@ def name_inversion_use_first_name():
 def transliteration_error():
     print("add transliteration_error")
 
+def random_name_error():
+    print("Replace with random name from list")
+    
+def missing():
+    print("Replace value with Na")
+
+def name_addition():
+    print("Add extra term to name")
+    
+def name_double_bar():
+    print("If Name > 1 term, remove at least 1 term from name")
 
 def jan_first_error():
     print("add jan 1st error")
 
-
-def typo_error():
+def typo_error_letters():
     print("typo occurs with probability p")
+
+def typo_error_numbers():
+    print("numerical typo occurs with probability p")
+    
+def gender_error():
+    print("replace m=f, f=m")
+    
+
 
 
 # Composite errors.  i.e. when these error type is picked, errors happen for sure
