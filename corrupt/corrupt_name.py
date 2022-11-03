@@ -286,7 +286,7 @@ def name_inversion(formatted_master_record, record_to_modify):
 
     return record_to_modify
 
-def last_name_extra(formatted_master_record, record_to_modify):
+def last_name_insertion(formatted_master_record, record_to_modify):
     """insert extra term in surname"""
     
     options = formatted_master_record["family_nameLabel"]
