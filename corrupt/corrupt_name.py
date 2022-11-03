@@ -25,6 +25,15 @@ def full_name_gen_uncorrupted_record(master_record, record_to_modify={}):
     return record_to_modify
 
 
+def first_name_gen_uncorrupted_record(master_record, record_to_modify={}):
+    record_to_modify["given_nameLabel"] = master_record["given_nameLabel"][0]
+    return record_to_modify
+
+def last_name_gen_uncorrupted_record(master_record, record_to_modify={}):
+    record_to_modify["family_nameLabel"] = master_record["family_nameLabel"][0]
+    return record_to_modify
+
+    
 def full_name_alternative(formatted_master_record, record_to_modify={}):
     """Choose an alternative full name if one exists"""
 
