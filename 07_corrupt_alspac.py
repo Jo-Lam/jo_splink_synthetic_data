@@ -6,6 +6,13 @@ import pandas as pd
 import numpy as np
 import duckdb
 
+# create path and transform .csv gold to parquet
+df = pd.read_csv('ALSPAC_syn_gold.csv')
+df.to_parquet('transformed_master_data.parquet')
+pd.read_parquet('transformed_master_data.parquet', engine='pyarrow')
+
+
+# This Block Introduces the corruption functions 
 
 from corrupt.corruption_functions import (
     master_record_no_op,
@@ -15,36 +22,51 @@ from corrupt.corruption_functions import (
     null_corruption,
 )
 
-
-
 from corrupt.corrupt_name import (
-    first_name_gen_uncorrupted_record,
-    last_name_gen_uncorrupted_record,
-    last_name_random_only,
-    last_name_insertion,
-    last_name_deletion,
-    first_name_alternative,
-    first_name_random_only,
-    first_name_insertion,
-    name_inversion,)
-    
+    alspac_G1_first_name_gen_uncorrupted_record,
+    alspac_G1_surname_gen_uncorrupted_record,
+    alspac_G0_surname_gen_uncorrupted_record,
+    alspac_first_name_random, # 6% completely different
+    alspac_G1_surname_random, # 95% completely different 
+    alspac_G0_surname_random, # 95% completely different 
+    alspac_first_name_alternatives, # 73% alternatives
+    alspac_first_name_insertion,
+    alspac_first_name_deletion,
+    alspac_G1_last_name_insertion,
+    alspac_G1_last_name_deletion,
+    alspac_G0_last_name_insertion,
+    alspac_G0_last_name_deletion,
+    alspac_first_name_typo, # 14% typo
+)
+
+from corrupt.corrupt_id import (
+    gen_uncorrupted_id
+)
 
 from corrupt.corrupt_date import (
-    date_corrupt_timedelta,
     date_gen_uncorrupted_record,
 )
 
-
-from path_fns.filepaths import (
-    TRANSFORMED_MASTER_DATA_ONE_ROW_PER_PERSON,
-    FINAL_CORRUPTED_OUTPUT_FILES_BASE,
+from corrupt.corrupt_matcat import (
+    gen_uncorrupted_matcat,
 )
 
-from corrupt.corrupt_lat_lng import lat_lng_uncorrupted_record, lat_lng_corrupt_distance
+from corrupt.corrupt_ethgroup import (
+    gen_uncorrupted_ethgroup,
+)
 
-from functools import partial
-from corrupt.geco_corrupt import get_zipf_dist
+from corrupt.corrupt_gender import (
+    gen_uncorrupted_gender,
+)
 
+from corrupt.corrupt_imd import (
+    gen_uncorrupted_imd,
+)
+# Change File Paths: add new folder and file.
+
+output = "output"
+date = "2023_01_09"
+ALSPAC_corrupt_outpath = os.path.join(output,date) #where to deposit the corrupted data
 
 from corrupt.record_corruptor import (
     CompositeCorruption,
@@ -52,7 +74,6 @@ from corrupt.record_corruptor import (
     RecordCorruptor,
     ProbabilityAdjustmentFromSQL,
 )
-
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
@@ -63,9 +84,9 @@ logger.setLevel(logging.INFO)
 
 con = duckdb.connect()
 
-in_path = os.path.join(
-    TRANSFORMED_MASTER_DATA_ONE_ROW_PER_PERSON, "transformed_master_data.parquet"
-)
+# change path to gold.
+
+in_path = os.path.join("transformed_master_data.parquet")
 
 
 # Configure how corruptions will be made for each field
@@ -74,236 +95,253 @@ in_path = os.path.join(
 # family name etc to output full_name
 
 # Guide to keys:
-# format_master_data.  This functino may apply additional cleaning to the master
-# record.  The same formatted master ata is then available to the
+# format_master_data.  This function may apply additional cleaning to the master
+# record.  The same formatted master data is then available to the
 # 'gen_uncorrupted_record' and 'corruption_functions'
 
+from functools import partial
+from corrupt.geco_corrupt import get_zipf_dist
 
 config = [
     {
-        "col_name": "full_name",
+        "col_name": "random_id",
         "format_master_data": master_record_no_op,
-        "gen_uncorrupted_record": full_name_gen_uncorrupted_record,
+        "gen_uncorrupted_record": gen_uncorrupted_id,
     },
     {
-        "col_name": "birth_country",
-        "format_master_data": partial(
-            format_master_record_first_array_item, colname="birth_countryLabel"
-        ),
-        "gen_uncorrupted_record": birth_country_gen_uncorrupted_record,
-    },
-    {
-        "col_name": "occupation",
-        "format_master_data": occupation_format_master_record,
-        "gen_uncorrupted_record": occupation_gen_uncorrupted_record,
-    },
-    {
-        "col_name": "dob",
-        "format_master_data": partial(
-            format_master_record_first_array_item, colname="dob"
-        ),
-        "gen_uncorrupted_record": partial(
-            date_gen_uncorrupted_record, input_colname="dob", output_colname="dob"
-        ),
-    },
-    {
-        "col_name": "dod",
-        "format_master_data": partial(
-            format_master_record_first_array_item, colname="dod"
-        ),
-        "gen_uncorrupted_record": partial(
-            date_gen_uncorrupted_record, input_colname="dod", output_colname="dod"
-        ),
-    },
-    {
-        "col_name": "birth_coordinates",
+        "col_name": "maternal_agecat",
         "format_master_data": master_record_no_op,
-        "gen_uncorrupted_record": partial(
-            lat_lng_uncorrupted_record,
-            input_colname="birth_coordinates",
-            output_colname="birth_coordinates",
-        ),
+        "gen_uncorrupted_record": gen_uncorrupted_matcat,
     },
     {
-        "col_name": "country_citizenLabel",
-        "format_master_data": country_citizenship_format_master_record,
-        "gen_uncorrupted_record": country_citizenship_gen_uncorrupted_record,
+        "col_name": "ethgroup",
+        "format_master_data": master_record_no_op,
+        "gen_uncorrupted_record": gen_uncorrupted_ethgroup,
+    },
+    {
+        "col_name": "gender_syn",
+        "format_master_data": master_record_no_op,
+        "gen_uncorrupted_record": gen_uncorrupted_gender,
+    },
+    {
+        "col_name": "imddecile",
+        "format_master_data": master_record_no_op,
+        "gen_uncorrupted_record": gen_uncorrupted_imd,
+    },
+    {
+        "col_name": "g1_dob_arc1",
+        "format_master_data": master_record_no_op,
+        "gen_uncorrupted_record": date_gen_uncorrupted_record,
+    },
+    {
+        "col_name": "G0_surname_syn",
+        "format_master_data": master_record_no_op,
+        "gen_uncorrupted_record": alspac_G0_surname_gen_uncorrupted_record,
+    },
+    {
+        "col_name": "G1_surname_syn",
+        "format_master_data": master_record_no_op,
+        "gen_uncorrupted_record": alspac_G1_surname_gen_uncorrupted_record,
+    },
+        {
+        "col_name": "G1_firstname_syn",
+        "format_master_data": master_record_no_op,
+        "gen_uncorrupted_record": alspac_G1_first_name_gen_uncorrupted_record,
     },
 ]
 
 
 rc = RecordCorruptor()
 
-
-########
-# Date of birth and date of death corruptions
-########
-
-# Create a timedelta corruption with baseline probability 20%
-# This is a simple independent corruption function that's not affected
-# by the presence or absence of other corruptions, or the values in the data
-rc.add_simple_corruption(
-    name="dob_timedelta",  # So we can keep a list of the corruptions that were activated
-    corruption_function=date_corrupt_timedelta,  # A python function containing the definition of the function
-    args={
-        "input_colname": "dob",
-        "output_colname": "dob",
-        "num_days_delta": 50,
-    },  # Any arguments that need to be passed to the python function
-    baseline_probability=0.1,
-)
-
-# A corruption function that simultaneously sets dob and dod to jan first
-# We will also add a probability adjustment that modifies the probability
-# of activation based on the values in the record
-dob_dod_jan_first = CompositeCorruption(
-    name="dob_dod_jan_first_corruption", baseline_probability=0.1
-)
-dob_dod_jan_first.add_corruption_function(
-    date_corrupt_jan_first, args={"input_colname": "dob", "output_colname": "dob"}
-)
-dob_dod_jan_first.add_corruption_function(
-    date_corrupt_jan_first, args={"input_colname": "dod", "output_colname": "dod"}
-)
-
-rc.add_composite_corruption(dob_dod_jan_first)
-
-# Make this twice as likely if the dob is < 1990
-sql_condition = "year(try_cast(dob as date)) < 1900"
-adjustment = ProbabilityAdjustmentFromSQL(sql_condition, dob_dod_jan_first, 4)
-rc.add_probability_adjustment(adjustment)
-
-rc.add_simple_corruption(
-    name="dob_null",
-    corruption_function=null_corruption,
-    args={"output_colname": "dob"},
-    baseline_probability=0.1,
-)
-
-rc.add_simple_corruption(
-    name="dod_null",
-    corruption_function=null_corruption,
-    args={"output_colname": "dod"},
-    baseline_probability=0.1,
-)
-
-# Note that the order in which you register corruptions is the order in which they're
-# executed.  e.g. you might want the jan first corruption to come after the timedelta
-# corruption, which may be better in the case where both are activated
-
-
 ########
 # Name-based corruptions
 ########
 
-
 rc.add_simple_corruption(
-    name="pick_alt_full_name",
-    corruption_function=full_name_alternative,
+    name="random_first",
+    corruption_function=alspac_first_name_random,
     args={},
-    baseline_probability=0.4,
+    baseline_probability=0.1,
 )
-
 rc.add_simple_corruption(
-    name="pick_alternative_individual_names",
-    corruption_function=each_name_alternatives,
+    name="first_name_variants",
+    corruption_function=alspac_first_name_alternatives,
     args={},
     baseline_probability=0.1,
 )
 
-# Name inversions more common for certain birthCountries
-name_inversion_corrpution = CompositeCorruption(
-    name="name_inversion", baseline_probability=0.05
+rc.add_simple_corruption(
+    name="first_name_deletion",
+    corruption_function=alspac_first_name_deletion,
+    args={},
+    baseline_probability=0.1,
 )
-name_inversion_corrpution.add_corruption_function(name_inversion, args={})
-rc.add_composite_corruption(name_inversion_corrpution)
+
+rc.add_simple_corruption(
+    name="first_name_insertion",
+    corruption_function=alspac_first_name_insertion,
+    args={},
+    baseline_probability=0.1,
+)
+
+rc.add_simple_corruption(
+    name="first_name_typo",
+    corruption_function=alspac_first_name_typo,
+    args={},
+    baseline_probability=0.1,
+)
+
+rc.add_simple_corruption(
+    name="G0_last_name_deletion",
+    corruption_function=alspac_G0_last_name_deletion,
+    args={},
+    baseline_probability=0.1,
+)
+
+rc.add_simple_corruption(
+    name="G0_last_name_insertion",
+    corruption_function=alspac_G0_last_name_insertion,
+    args={},
+    baseline_probability=0.1,
+)
+
+rc.add_simple_corruption(
+    name="G0_last_name_random",
+    corruption_function=alspac_G0_surname_random,
+    args={},
+    baseline_probability=0.1,
+)
+
+rc.add_simple_corruption(
+    name="G1_last_name_deletion",
+    corruption_function=alspac_G1_last_name_deletion,
+    args={},
+    baseline_probability=0.1,
+)
+
+rc.add_simple_corruption(
+    name="G1_last_name_insertion",
+    corruption_function=alspac_G1_last_name_insertion,
+    args={},
+    baseline_probability=0.1,
+)
+
+rc.add_simple_corruption(
+    name="G1_last_name_random",
+    corruption_function=alspac_G1_surname_random,
+    args={},
+    baseline_probability=0.1,
+)
+
 
 adjustment_lookup = {
-    "birth_country": {
-        "Japan": [(name_inversion_corrpution, 2)],
-        "People's Republic of China": [(name_inversion_corrpution, 4)],
+    "ethgroup": {
+        "White": [(alspac_first_name_random, 1),
+         (alspac_first_name_alternatives, 1),
+         (alspac_first_name_deletion, 1), 
+        (alspac_first_name_insertion, 1), 
+        (alspac_first_name_typo, 1), 
+        (alspac_G0_last_name_deletion, 1),
+        (alspac_G0_last_name_insertion, 1),
+        (alspac_G0_surname_random, 1) ,
+        (alspac_G1_last_name_deletion, 1),
+        (alspac_G1_last_name_insertion, 1),
+        (alspac_G1_surname_random, 1)],
+        "Black":[(alspac_first_name_random, 1.19),
+        (alspac_first_name_deletion,1.19) , 
+        (alspac_first_name_alternatives,1.19) , 
+        (alspac_first_name_insertion,1.19) , 
+        (alspac_first_name_typo,1.19) , 
+        (alspac_G0_last_name_deletion,1.05) ,
+        (alspac_G0_last_name_insertion,1.05) ,
+        (alspac_G0_surname_random,1.05) ,
+        (alspac_G1_last_name_deletion,1.43) ,
+        (alspac_G1_last_name_insertion,1.43) ,
+        (alspac_G1_surname_random, 1.43)],
+        "Other":[(alspac_first_name_random, 1.13),
+        (alspac_first_name_alternatives, 1.13),
+        (alspac_first_name_deletion, 1.13), 
+        (alspac_first_name_insertion, 1.13), 
+        (alspac_first_name_typo, 1.13), 
+        (alspac_G0_last_name_deletion, 1.08),
+        (alspac_G0_last_name_insertion, 1.08),
+        (alspac_G0_surname_random,  1.08),
+        (alspac_G1_last_name_deletion, 2.05),
+        (alspac_G1_last_name_insertion, 2.05),
+        (alspac_G1_surname_random, 2.05)],
+        "Asian":[(alspac_first_name_random, 0.99),
+        (alspac_first_name_alternatives, 0.99),
+        (alspac_first_name_deletion, 0.99), 
+        (alspac_first_name_insertion, 0.99), 
+        (alspac_first_name_typo,0.99), 
+        (alspac_G0_last_name_deletion, 0.46),
+        (alspac_G0_last_name_insertion, 0.46),
+        (alspac_G0_surname_random, 0.46),
+        (alspac_G1_last_name_deletion, 0.34),
+        (alspac_G1_last_name_insertion,0.34),
+        (alspac_G1_surname_random, 0.34)],
+    },
+    "maternal_agecat":{
+        "<20":[(alspac_first_name_random, 0.57),
+        (alspac_first_name_alternatives, 0.57),
+        (alspac_first_name_deletion, 0.57), 
+        (alspac_first_name_insertion, 0.57), 
+        (alspac_first_name_typo, 0.57), 
+        (alspac_G0_last_name_deletion, 2.89),
+        (alspac_G0_last_name_insertion, 2.89),
+        (alspac_G0_surname_random, 2.89),
+        (alspac_G1_last_name_deletion, 2.60),
+        (alspac_G1_last_name_insertion, 2.60),
+        (alspac_G1_surname_random,2.60)],
+        "20-29":[(alspac_first_name_random, 0.85),
+        (alspac_first_name_alternatives, 0.85),
+        (alspac_first_name_deletion, 0.85), 
+        (alspac_first_name_insertion, 0.85), 
+        (alspac_first_name_typo, 0.85), 
+        (alspac_G0_last_name_deletion, 1.61),
+        (alspac_G0_last_name_insertion,1.61) ,
+        (alspac_G0_surname_random,  1.61),
+        (alspac_G1_last_name_deletion, 1.43),
+        (alspac_G1_last_name_insertion, 1.43),
+        (alspac_G1_surname_random, 1.43)],
+        "30-39":[(alspac_first_name_random, 1),
+        (alspac_first_name_deletion, 1), 
+        (alspac_first_name_alternatives, 1), 
+        (alspac_first_name_insertion, 1), 
+        (alspac_first_name_typo, 1), 
+        (alspac_G0_last_name_deletion, 1),
+        (alspac_G0_last_name_insertion, 1),
+        (alspac_G0_surname_random, 1),
+        (alspac_G1_last_name_deletion, 1),
+        (alspac_G1_last_name_insertion, 1),
+        (alspac_G1_surname_random, 1)],
+        "40+":[(alspac_first_name_random, 1.09),
+        (alspac_first_name_deletion, 1.09), 
+        (alspac_first_name_alternatives, 1.09), 
+        (alspac_first_name_insertion, 1.09), 
+        (alspac_first_name_typo, 1.09), 
+        (alspac_G0_last_name_deletion, 1.14),
+        (alspac_G0_last_name_insertion, 1.14),
+        (alspac_G0_surname_random,  1.14),
+        (alspac_G1_last_name_deletion, 1.44),
+        (alspac_G1_last_name_insertion, 1.44),
+        (alspac_G1_surname_random, 1.44)],
+        "NA":[(alspac_first_name_random, 1.24),
+        (alspac_first_name_deletion, 1.24), 
+        (alspac_first_name_alternatives, 1.24), 
+        (alspac_first_name_insertion, 1.24), 
+        (alspac_first_name_typo, 1.24), 
+        (alspac_G0_last_name_deletion, 1.50),
+        (alspac_G0_last_name_insertion, 1.50),
+        (alspac_G0_surname_random,  1.50),
+        (alspac_G1_last_name_deletion, 2.13),
+        (alspac_G1_last_name_insertion, 2.13),
+        (alspac_G1_surname_random,2.13)],
     }
 }
+
 adjustment = ProbabilityAdjustmentFromLookup(adjustment_lookup)
 rc.add_probability_adjustment(adjustment)
-
-
-# Typos more common from certain contries
-name_typo_corruption = CompositeCorruption(name="name_typo", baseline_probability=0.2)
-name_typo_corruption.add_corruption_function(full_name_typo, args={})
-rc.add_composite_corruption(name_typo_corruption)
-
-
-sql_condition = "birth_country not in ('United States of America', 'United Kingdom') and birth_country not null"
-adjustment = ProbabilityAdjustmentFromSQL(sql_condition, name_typo_corruption, 2)
-rc.add_probability_adjustment(adjustment)
-
-rc.add_simple_corruption(
-    name="full_name_null",
-    corruption_function=null_corruption,
-    args={"output_colname": "full_name"},
-    baseline_probability=0.1,
-)
-
-########
-# Occupation corruption
-########
-
-rc.add_simple_corruption(
-    name="occupation_corrupt",
-    corruption_function=occupation_corrupt,
-    args={},
-    baseline_probability=0.1,
-)
-
-rc.add_simple_corruption(
-    name="occupation_null",
-    corruption_function=null_corruption,
-    args={"output_colname": "occupation"},
-    baseline_probability=0.1,
-)
-
-########
-# Country citizenship corruption
-########
-rc.add_simple_corruption(
-    name="country_citizenship_corrupt",
-    corruption_function=country_citizenship_corrupt,
-    args={},
-    baseline_probability=0.3,
-)
-
-rc.add_simple_corruption(
-    name="country_citizenship_null",
-    corruption_function=null_corruption,
-    args={"output_colname": "country_citizenship"},
-    baseline_probability=0.1,
-)
-
-########
-# Birth coordinates corruption
-########
-
-
-rc.add_simple_corruption(
-    name="birth_coordinates_corrupt",
-    corruption_function=lat_lng_corrupt_distance,
-    args={
-        "input_colname": "birth_coordinates",
-        "output_colname": "birth_coordinates",
-        "distance_min": 25,
-        "distance_max": 25,
-    },
-    baseline_probability=0.1,
-)
-
-rc.add_simple_corruption(
-    name="birth_coordinates_null",
-    corruption_function=null_corruption,
-    args={"output_colname": "birth_coordinates"},
-    baseline_probability=0.1,
-)
-
 
 max_corrupted_records = 20
 zipf_dist = get_zipf_dist(max_corrupted_records)
@@ -312,7 +350,7 @@ zipf_dist = get_zipf_dist(max_corrupted_records)
 pd.options.display.max_columns = 1000
 pd.options.display.max_colwidth = 1000
 
-Path(FINAL_CORRUPTED_OUTPUT_FILES_BASE).mkdir(parents=True, exist_ok=True)
+Path(ALSPAC_corrupt_outpath).mkdir(parents=True, exist_ok=True)
 
 
 if __name__ == "__main__":
@@ -327,7 +365,7 @@ if __name__ == "__main__":
 
     for year in range(start_year, start_year + num_years + 1):
 
-        out_path = os.path.join(FINAL_CORRUPTED_OUTPUT_FILES_BASE, f"{year}.parquet")
+        out_path = os.path.join(ALSPAC_corrupt_outpath, f"{year}.parquet")
 
         if os.path.exists(out_path):
             continue
