@@ -59,19 +59,19 @@ class CompositeCorruption:
             f"{self.adjusted_probability}"
         )
 
-        # if random.uniform(0, 1) < self.adjusted_probability:
-        #    self.reset_probability()
-        #    record_to_modify_before = str(record_to_modify)
-        #    for fn in self.functions:
-        #        record_to_modify = fn(formatted_master_data, record_to_modify)
+          if random.uniform(0, 1) < self.adjusted_probability:
+            self.reset_probability()
+            record_to_modify_before = str(record_to_modify)
+            for fn in self.functions:
+                record_to_modify = fn(formatted_master_data, record_to_modify)
 
-        #    if record_to_modify_before != str(record_to_modify):
-        #        record_to_modify["corruptions_applied"].append(self.name)
-        #    return record_to_modify
+            if record_to_modify_before != str(record_to_modify):
+                record_to_modify["corruptions_applied"].append(self.name)
+            return record_to_modify
 
-        # else:
-        #    self.reset_probability()
-        #    return record_to_modify
+          else:
+            self.reset_probability()
+            return record_to_modify
 
 
 class ProbabilityAdjustmentFromLookup:
