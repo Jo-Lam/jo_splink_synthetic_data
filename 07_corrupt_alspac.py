@@ -353,6 +353,7 @@ pd.options.display.max_colwidth = 1000
 Path(ALSPAC_corrupt_outpath).mkdir(parents=True, exist_ok=True)
 
 
+""" for 
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="data_linking job runner")
@@ -362,58 +363,60 @@ if __name__ == "__main__":
     args = parser.parse_args()
     start_year = args.start_year
     num_years = args.num_years
+"""
 
-    for year in range(start_year, start_year + num_years + 1):
 
-        out_path = os.path.join(ALSPAC_corrupt_outpath, f"{year}.parquet")
+for year in range(1991, 1993):
 
-        if os.path.exists(out_path):
-            continue
+    out_path = os.path.join(ALSPAC_corrupt_outpath, f"{year}.parquet")
 
-        sql = f"""
-        select *
-        from '{in_path}'
-        where
-            year(try_cast(dod[1] as date)) = {year}
-        """
+    if os.path.exists(out_path):
+        continue
 
-        raw_data = con.execute(sql).df()
-        records = raw_data.to_dict(orient="records")
+    sql = f"""
+    select *
+    from '{in_path}'
+    where
+        year(try_cast(g1_dob[1] as date)) = {year}
+    """
 
-        output_records = []
-        for i, master_input_record in enumerate(records):
+    raw_data = con.execute(sql).df()
+    records = raw_data.to_dict(orient="records")
 
-            # Formats the input data into an easy format for producing
-            # an uncorrupted/corrupted outputs records
-            formatted_master_record = format_master_data(master_input_record, config)
+    output_records = []
+    for i, master_input_record in enumerate(records):
 
-            uncorrupted_output_record = generate_uncorrupted_output_record(
-                formatted_master_record, config
+        # Formats the input data into an easy format for producing
+        # an uncorrupted/corrupted outputs records
+        formatted_master_record = format_master_data(master_input_record, config)
+
+        uncorrupted_output_record = generate_uncorrupted_output_record(
+            formatted_master_record, config
+        )
+        uncorrupted_output_record["corruptions_applied"] = []
+
+        output_records.append(uncorrupted_output_record)
+
+        # How many corrupted records to generate
+        total_num_corrupted_records = np.random.choice(
+            zipf_dist["vals"], p=zipf_dist["weights"]
+        )
+
+        for i in range(total_num_corrupted_records):
+            record_to_modify = uncorrupted_output_record.copy()
+            record_to_modify["corruptions_applied"] = []
+            record_to_modify["id"] = (
+                uncorrupted_output_record["cluster"] + f"_{i+1}"
             )
-            uncorrupted_output_record["corruptions_applied"] = []
-
-            output_records.append(uncorrupted_output_record)
-
-            # How many corrupted records to generate
-            total_num_corrupted_records = np.random.choice(
-                zipf_dist["vals"], p=zipf_dist["weights"]
+            record_to_modify["uncorrupted_record"] = False
+            rc.apply_probability_adjustments(uncorrupted_output_record)
+            corrupted_record = rc.apply_corruptions_to_record(
+                formatted_master_record,
+                record_to_modify,
             )
+            output_records.append(corrupted_record)
 
-            for i in range(total_num_corrupted_records):
-                record_to_modify = uncorrupted_output_record.copy()
-                record_to_modify["corruptions_applied"] = []
-                record_to_modify["id"] = (
-                    uncorrupted_output_record["cluster"] + f"_{i+1}"
-                )
-                record_to_modify["uncorrupted_record"] = False
-                rc.apply_probability_adjustments(uncorrupted_output_record)
-                corrupted_record = rc.apply_corruptions_to_record(
-                    formatted_master_record,
-                    record_to_modify,
-                )
-                output_records.append(corrupted_record)
+    df = pd.DataFrame(output_records)
 
-        df = pd.DataFrame(output_records)
-
-        df.to_parquet(out_path, index=False)
-        print(f"written {year} with {len(df):,.0f} records")
+    df.to_parquet(out_path, index=False)
+    print(f"written {year} with {len(df):,.0f} records")
