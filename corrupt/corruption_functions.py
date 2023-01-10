@@ -49,7 +49,7 @@ def alspac_generate_uncorrupted_output_record(formatted_master_record, config):
         fn = c["gen_uncorrupted_record"]
         uncorrupted_record = fn(formatted_master_record, record_to_modify=uncorrupted_record)
 
-    uncorrupted_record["id"] = formatted_master_record["random_id"] + 9000000
+    uncorrupted_record["id"] = formatted_master_record["random_id"] + 9000000 #ALSPAC random ID is int
 
     return uncorrupted_record
 
