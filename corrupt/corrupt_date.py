@@ -72,3 +72,10 @@ def date_corrupt_jan_first(
     record_to_modify[output_colname] = str(input_value)[:4] + "-01-01"
 
     return record_to_modify
+
+
+def gen_uncorrupted_date_alspac(formatted_master_record, record_to_modify={}):
+
+    record_to_modify["g1_dob"] = formatted_master_record["g1_dob"]
+
+    return record_to_modify

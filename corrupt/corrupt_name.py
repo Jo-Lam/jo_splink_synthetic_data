@@ -411,16 +411,16 @@ def last_name_typo(formatted_master_record, record_to_modify={}):
 
 # FOR ALSPAC 
 
-def alspac_G1_first_name_gen_uncorrupted_record(master_record, record_to_modify={}):
-    record_to_modify["G1_firstname"] = master_record["G1_firstname"][0]
+def alspac_G1_first_name_gen_uncorrupted_record(formatted_master_record, record_to_modify={}):
+    record_to_modify["G1_firstname"] = formatted_master_record["G1_firstname"] 
     return record_to_modify
 
-def alspac_G1_surname_gen_uncorrupted_record(master_record, record_to_modify={}):
-    record_to_modify["G1_surname"] = master_record["G1_surname"][0]
+def alspac_G1_surname_gen_uncorrupted_record(formatted_master_record, record_to_modify={}):
+    record_to_modify["G1_surname"] = formatted_master_record["G1_surname"] 
     return record_to_modify
 
-def alspac_G0_surname_gen_uncorrupted_record(master_record, record_to_modify={}):
-    record_to_modify["G0_surname"] = master_record["G0_surname"][0]
+def alspac_G0_surname_gen_uncorrupted_record(formatted_master_record, record_to_modify={}):
+    record_to_modify["G0_surname"] = formatted_master_record["G0_surname"] 
     return record_to_modify
 
 # Random first name (Random non-diminutive first name)
@@ -518,7 +518,7 @@ def alspac_first_name_alternatives(formatted_master_record, record_to_modify={})
 
 def alspac_first_name_insertion(formatted_master_record, record_to_modify):
     """insertion of extra term in first name"""
-    given = formatted_master_record["G1_firstname"][0]
+    given = formatted_master_record["G1_firstname"] 
 
     if given is None:
         record_to_modify["G1_firstname"] = None
@@ -541,10 +541,10 @@ def alspac_first_name_insertion(formatted_master_record, record_to_modify):
 
 def alspac_first_name_deletion(formatted_master_record, record_to_modify):
     """deletion of extra term in first name"""
-    if len(formatted_master_record["G1_firstname"][0]) == 1:
-      record_to_modify["G1_firstname"] = formatted_master_record["G1_firstname"][0]
+    if len(formatted_master_record["G1_firstname"] ) == 1:
+      record_to_modify["G1_firstname"] = formatted_master_record["G1_firstname"] 
         
-    new_name = formatted_master_record["G1_firstname"][0].split(" ")
+    new_name = formatted_master_record["G1_firstname"].split(" ")
     # new_name = new_name.split("-") # remove hyphens in first name
     
     try:
@@ -599,10 +599,10 @@ def alspac_G1_last_name_insertion(formatted_master_record, record_to_modify):
 
 def alspac_G1_last_name_deletion(formatted_master_record, record_to_modify):
     """deletion of extra term in surname"""
-    if len(formatted_master_record["G1_surname"][0])==1:
-        record_to_modify["G1_surname"] = formatted_master_record["G1_surname"][0]
+    if len(formatted_master_record["G1_surname"])==1:
+        record_to_modify["G1_surname"] = formatted_master_record["G1_surname"]
         
-    new_name = formatted_master_record["G1_surname"][0].split(" ")
+    new_name = formatted_master_record["G1_surname"].split(" ")
     new_name = new_name.split("-") # do not remove hyphens in last name
     
     try:
@@ -658,10 +658,10 @@ def alspac_G0_last_name_insertion(formatted_master_record, record_to_modify):
 
 def alspac_G0_last_name_deletion(formatted_master_record, record_to_modify):
     """deletion of extra term in surname"""
-    if len(formatted_master_record["G0_surname"][0])==1:
+    if len(formatted_master_record["G0_surname"])==1:
         record_to_modify["G0_surname"] = formatted_master_record["G0_surname"]
         
-    new_name = formatted_master_record["G0_surname"][0].split(" ")
+    new_name = formatted_master_record["G0_surname"].split(" ")
     new_name = new_name.split("-") # do not remove hyphens in last name
     
     try:

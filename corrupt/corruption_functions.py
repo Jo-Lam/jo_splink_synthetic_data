@@ -39,6 +39,19 @@ def generate_uncorrupted_output_record(formatted_master_record, config):
 
     return uncorrupted_record
 
+def alspac_generate_uncorrupted_output_record(formatted_master_record, config):
+
+    uncorrupted_record = {"uncorrupted_record": True}
+
+    uncorrupted_record["cluster"] = formatted_master_record["random_id"]
+
+    for c in config:
+        fn = c["gen_uncorrupted_record"]
+        uncorrupted_record = fn(formatted_master_record, record_to_modify=uncorrupted_record)
+
+    uncorrupted_record["id"] = formatted_master_record["random_id"] + 9000000
+
+    return uncorrupted_record
 
 def format_master_record_first_array_item(master_input_record, colname):
     if not master_input_record[colname]:
