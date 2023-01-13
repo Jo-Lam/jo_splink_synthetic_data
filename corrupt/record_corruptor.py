@@ -53,13 +53,13 @@ class CompositeCorruption:
         formatted_master_data,
         record_to_modify,
     ):
-
+        """
         logger.debug(
             f"Probability {self.name} composite corruption will be selected is "
             f"{self.adjusted_probability}"
         )
 
-          if random.uniform(0, 1) < self.adjusted_probability:
+        if random.uniform(0, 1) < self.adjusted_probability:
             self.reset_probability()
             record_to_modify_before = str(record_to_modify)
             for fn in self.functions:
@@ -69,10 +69,10 @@ class CompositeCorruption:
                 record_to_modify["corruptions_applied"].append(self.name)
             return record_to_modify
 
-          else:
+        else:
             self.reset_probability()
             return record_to_modify
-
+"""
 
 class ProbabilityAdjustmentFromLookup:
     def __init__(self, lookup):
@@ -173,6 +173,7 @@ class RecordCorruptor:
 
         corruption.add_corruption_function(corruption_function, args=args)
         self.add_composite_corruption(corruption)
+        return corruption
 
     def add_probability_adjustment(self, adjustment):
         self.probability_adjustments.append(adjustment)
