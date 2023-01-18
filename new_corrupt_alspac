@@ -161,7 +161,7 @@ rc = RecordCorruptor()
 ########
 
 g1_dob_jan_first = CompositeCorruption(
-    name="g0g1_dob_jan_first", baseline_probability=0.005
+    name="g1_dob_jan_first", baseline_probability=0.005
 )
 
 g1_dob_jan_first.add_corruption_function(
@@ -170,14 +170,14 @@ g1_dob_jan_first.add_corruption_function(
 
 rc.add_composite_corruption(g1_dob_jan_first)
 
-sql_condition = "year(try_cast(dob as date)) < 1900"
+sql_condition = "year(try_cast(g1_dob as date)) < 1900"
 adjustment = ProbabilityAdjustmentFromSQL(sql_condition, g1_dob_jan_first, 4)
 rc.add_probability_adjustment(adjustment)
 
 rc.add_simple_corruption(
     name="dob_null",
     corruption_function=null_corruption,
-    args={"output_colname": "dob"},
+    args={"output_colname": "g1_dob"},
     baseline_probability=0.01,
 )
 
@@ -471,12 +471,9 @@ rc.add_probability_adjustment(adjustment)
 adjustment = ProbabilityAdjustmentFromSQL(sql_condition, g1_lastname_random_corruption, 2.13)
 rc.add_probability_adjustment(adjustment)
 
-
 # Sex 
 
 # IMD
-
-
 
 
 name_inversion_corruption = CompositeCorruption(
@@ -509,72 +506,6 @@ adjustment_lookup_mat = {
 
 adjustment_mat = ProbabilityAdjustmentFromLookup(adjustment_lookup_mat)
 rc.add_probability_adjustment(adjustment_mat)
-                   
-
-"""
-[(alspac_first_name_random, 0.57),
-        (alspac_first_name_alternatives, 0.57),
-        (alspac_first_name_deletion, 0.57), 
-        (alspac_first_name_insertion, 0.57), 
-        (alspac_first_name_typo, 0.57), 
-        (alspac_G0_last_name_deletion, 2.89),
-        (alspac_G0_last_name_insertion, 2.89),
-        (alspac_G0_surname_random, 2.89),
-        (alspac_G1_last_name_deletion, 2.60),
-        (alspac_G1_last_name_insertion, 2.60),
-        (alspac_name_inversion, 2.60),
-        (alspac_G1_surname_random,2.60)],
-        "20-29":[(alspac_first_name_random, 0.85),
-        (alspac_first_name_alternatives, 0.85),
-        (alspac_first_name_deletion, 0.85), 
-        (alspac_first_name_insertion, 0.85), 
-        (alspac_first_name_typo, 0.85), 
-        (alspac_G0_last_name_deletion, 1.61),
-        (alspac_G0_last_name_insertion,1.61) ,
-        (alspac_G0_surname_random,  1.61),
-        (alspac_G1_last_name_deletion, 1.43),
-        (alspac_G1_last_name_insertion, 1.43),
-        (alspac_name_inversion, 1),
-        (alspac_G1_surname_random, 1.43)],
-        "30-39":[(alspac_first_name_random, 1),
-        (alspac_first_name_deletion, 1), 
-        (alspac_first_name_alternatives, 1), 
-        (alspac_first_name_insertion, 1), 
-        (alspac_first_name_typo, 1), 
-        (alspac_G0_last_name_deletion, 1),
-        (alspac_G0_last_name_insertion, 1),
-        (alspac_G0_surname_random, 1),
-        (alspac_G1_last_name_deletion, 1),
-        (alspac_G1_last_name_insertion, 1),
-        (alspac_name_inversion, 1),
-        (alspac_G1_surname_random, 1)],
-        "40+":[(alspac_first_name_random, 1.09),
-        (alspac_first_name_deletion, 1.09), 
-        (alspac_first_name_alternatives, 1.09), 
-        (alspac_first_name_insertion, 1.09), 
-        (alspac_first_name_typo, 1.09), 
-        (alspac_G0_last_name_deletion, 1.14),
-        (alspac_G0_last_name_insertion, 1.14),
-        (alspac_G0_surname_random,  1.14),
-        (alspac_G1_last_name_deletion, 1.44),
-        (alspac_G1_last_name_insertion, 1.44),
-        (alspac_name_inversion, 1.44),
-        (alspac_G1_surname_random, 1.44)],
-        "NA":[(alspac_first_name_random, 1.24),
-        (alspac_first_name_deletion, 1.24), 
-        (alspac_first_name_alternatives, 1.24), 
-        (alspac_first_name_insertion, 1.24), 
-        (alspac_first_name_typo, 1.24), 
-        (alspac_G0_last_name_deletion, 1.50),
-        (alspac_G0_last_name_insertion, 1.50),
-        (alspac_G0_surname_random,  1.50),
-        (alspac_G1_last_name_deletion, 2.13),
-        (alspac_G1_last_name_insertion, 2.13),
-        (alspac_name_inversion, 2.13),
-        (alspac_G1_surname_random,2.13)],
-    }
-}
-"""
 
 
 max_corrupted_records = 20
@@ -641,102 +572,3 @@ df = pd.DataFrame(output_records)
 
 df.to_parquet(out_path, index=False)
 # print(f"written {year} with {len(df):,.0f} records")
-
-""" 
-for 
-if __name__ == "__main__":
-
-    parser = argparse.ArgumentParser(description="data_linking job runner")
-
-    parser.add_argument("--start_year", type=int)
-    parser.add_argument("--num_years", type=int)
-    args = parser.parse_args()
-    start_year = args.start_year
-    num_years = args.num_years
-
-
-
-# for year in range(1991, 1993):
-
-out_path = os.path.join(ALSPAC_corrupt_outpath, f"corrupted.parquet")
-
-# if os.path.exists(out_path):
-#    continue
-
-sql = f
-select *
-from '{in_path}'
-
-
-# where
-#    year(try_cast(g1_dob[1] as date)) = {year}
-
-raw_data = con.execute(sql).df()
-records = raw_data.to_dict(orient="records")
-
-output_records = []
-
-for i, master_input_record in enumerate(records):
-
-    # Formats the input data into an easy format for producing
-    # an uncorrupted/corrupted outputs records
-    formatted_master_record = format_master_data(master_input_record, config)
-
-    uncorrupted_output_record = alspac_generate_uncorrupted_output_record(
-        formatted_master_record, config
-    )
-    uncorrupted_output_record["corruptions_applied"] = []
-
-    output_records.append(uncorrupted_output_record)
-
-    # How many corrupted records to generate
-    total_num_corrupted_records = np.random.choice(
-        zipf_dist["vals"], p=zipf_dist["weights"]
-    )
-
-    for j in range(total_num_corrupted_records):
-        record_to_modify = uncorrupted_output_record.copy()
-        record_to_modify["corruptions_applied"] = []
-        record_to_modify["id"] = (
-            uncorrupted_output_record["cluster"] + j+1
-        )
-        record_to_modify["uncorrupted_record"] = False
-        rc.apply_probability_adjustments(uncorrupted_output_record)
-        corrupted_record = rc.apply_corruptions_to_record(
-            formatted_master_record,
-            record_to_modify,
-        )
-        output_records.append(corrupted_record)
-
-formatted_master_record = records[0]
-uncorrupted_output_record = alspac_generate_uncorrupted_output_record(
-        formatted_master_record, config
-)
-uncorrupted_output_record["corruptions_applied"] = []
-total_num_corrupted_records = np.random.choice(
-        zipf_dist["vals"], p=zipf_dist["weights"]
-)
-i = 0
-j = 0
-
-record_to_modify = uncorrupted_output_record.copy()
-record_to_modify["corruptions_applied"] = []
-record_to_modify["id"] = (
-    uncorrupted_output_record["cluster"] + j+1
-)
-record_to_modify["uncorrupted_record"] = False
-rc.apply_probability_adjustments(uncorrupted_output_record)
-corrupted_record = rc.apply_corruptions_to_record(
-    formatted_master_record,
-    record_to_modify,
-)
-output_records.append(corrupted_record)
-
-print(output_records)
-
-# df = pd.DataFrame(output_records)
-
-# df.to_parquet(out_path, index=False)
-# print(f"written {len(df):,.0f} records")
-# print(f"written {year} with {len(df):,.0f} records")
-"""
