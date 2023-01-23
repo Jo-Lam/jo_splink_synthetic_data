@@ -408,8 +408,9 @@ def last_name_typo(formatted_master_record, record_to_modify={}):
 
     return record_to_modify
 
-
+######################################
 # FOR ALSPAC 
+######################################
 
 def alspac_G1_first_name_gen_uncorrupted_record(formatted_master_record, record_to_modify={}):
     record_to_modify["G1_firstname"] = formatted_master_record["G1_firstname"] 
@@ -426,63 +427,61 @@ def alspac_G0_surname_gen_uncorrupted_record(formatted_master_record, record_to_
 # Random first name (Random non-diminutive first name)
 def alspac_first_name_random(formatted_master_record, record_to_modify={}):
     
-    options = formatted_master_record["G1_firstname"]
+    orig_firstname = formatted_master_record['G1_firstname']
+    first_name_alt_lookup = get_given_name_alternatives_lookup()
+    new_firstname = random.choice(list(first_name_alt_lookup.keys()))
+    while new_firstname == orig_firstname:
+        new_firstname = random.choice(list(first_name_alt_lookup.keys()))
+        if new_firstname != orig_firstname:
+            continue
 
-    if options is None:
+    if orig_firstname is None:
         record_to_modify["G1_firstname"] = None
         return record_to_modify
 
-    names = options[0]
-
-    output_names = []
-    for n in names:
-        n = n.lower()
-        n[0] = random.choice(formatted_master_record["G1_firstname"])
-    output_names.append(n)
-    record_to_modify["G1_firstname"] = " ".join(output_names).lower()
+    record_to_modify["G1_firstname"] = " ".join(new_firstname).lower()
 
     return record_to_modify
 
 
 #random G1 last name - married/devorced
+
+
 def alspac_G1_surname_random(formatted_master_record, record_to_modify={}):
     
-    options = formatted_master_record["G1_surname"]
+    orig_surname = formatted_master_record['G1_surname']
+    family_name_alt_lookup = get_family_name_alternatives_lookup()
+    new_surname = random.choice(list(family_name_alt_lookup.keys()))
+    while new_surname == orig_surname:
+        new_surname = random.choice(list(family_name_alt_lookup.keys()))
+        if new_surname != orig_surname:
+            continue
 
-    if options is None:
+    if orig_surname is None:
         record_to_modify["G1_surname"] = None
         return record_to_modify
 
-    names = options[0]
-
-    output_names = []
-    for n in names:
-        n = n.lower()
-        n[0] = random.choice(formatted_master_record["G1_surname"])
-    output_names.append(n)
-
-    record_to_modify["G1_surname"] = " ".join(output_names).lower()
+    record_to_modify["G1_surname"] = " ".join(new_surname).lower()
 
     return record_to_modify
 
 #random G0 last name - married/devorced
 def alspac_G0_surname_random(formatted_master_record, record_to_modify={}):
     
-    options = formatted_master_record["G0_surname"]
+    orig_surname = formatted_master_record['G0_surname']
+    family_name_alt_lookup = get_family_name_alternatives_lookup()
+    new_surname = random.choice(list(family_name_alt_lookup.keys()))
 
-    if options is None:
+    while new_surname == orig_surname:
+        new_surname = random.choice(list(family_name_alt_lookup.keys()))
+        if new_surname != orig_surname:
+            continue
+
+    if orig_surname is None:
         record_to_modify["G0_surname"] = None
         return record_to_modify
 
-    names = options[0]
-
-    output_names = []
-    for n in names:
-        n = n.lower()
-        n[0] = random.choice(formatted_master_record["G0_surname"])
-    output_names.append(n)
-
-    record_to_modify["G0_surname"] = " ".join(output_names).lower()
+    record_to_modify["G0_surname"] = " ".join(new_surname).lower()
 
     return record_to_modify
 
@@ -518,121 +517,152 @@ def alspac_first_name_alternatives(formatted_master_record, record_to_modify={})
 
 def alspac_first_name_insertion(formatted_master_record, record_to_modify):
     """insertion of extra term in first name"""
-    given = formatted_master_record["G1_firstname"] 
+    given = formatted_master_record['G1_firstname']
 
     if given is None:
         record_to_modify["G1_firstname"] = None
         return record_to_modify
     
-    if len(given) == 1:
-        given_extra = given[0] + " " + random.choice(formatted_master_record["G1_firstname"])
-        record_to_modify["G1_firstname"] = given_extra.lower()
-    elif given is None:
-        record_to_modify["G1_firstname"] = None
-        return record_to_modify
-    elif len(given) == 2:
-        given_extra = given[0] + " " + given[1] + " " + random.choice(formatted_master_record["G1_firstname"])
-        record_to_modify["G1_firstname"] = given_extra.lower()
-    elif len(given) == 3:
-        given_extra = given[0] + " " + given[1] + " " + given[2] + random.choice(formatted_master_record["G1_firstname"])
-        record_to_modify["G1_firstname"] = given_extra.lower()
+    first_name_alt_lookup = get_given_name_alternatives_lookup()
+    new_firstname = random.choice(list(first_name_alt_lookup.keys()))
+
+    record_to_modify["G1_firstname"] = given + " " + new_firstname
 
     return record_to_modify
 
 def alspac_first_name_deletion(formatted_master_record, record_to_modify):
+    orig_firstname = formatted_master_record['G1_firstname']
     """deletion of extra term in first name"""
-    if len(formatted_master_record["G1_firstname"] ) == 1:
-      record_to_modify["G1_firstname"] = formatted_master_record["G1_firstname"] 
+    num_of_terms = orig_firstname.count(" ") + 1 
+    if num_of_terms == 0 or num_of_terms == 1:
+      record_to_modify["G1_firstname"] = orig_firstname 
         
-    new_name = formatted_master_record["G1_firstname"].split(" ")
-    # new_name = new_name.split("-") # remove hyphens in first name
     
-    try:
-        first_term_removed = new_name.pop(0)
-    except IndexError:
-        first_term_removed = None
-    try:
-        second_term_removed = new_name.pop(1)
-    except IndexError:
-        second_term_removed = None
-    try:
-        third_term_removed = new_name.pop(2)
-    except IndexError:
-        third_term_removed = None
-        
-    # count number of terms, and condition on it
-    if len(new_name) >= 4:
-        new_name = third_term_removed
-        record_to_modify["G1_firstname"] = new_name
-    elif len(new_name) == 3:
-        new_name = second_term_removed
-        record_to_modify["G1_firstname"] = new_name
-    elif len(new_name) == 2:
-        new_name = first_term_removed
-        record_to_modify["G1_firstname"] = new_name
-    elif len(new_name) == 1:
-        record_to_modify["G1_firstname"] = new_name
+    # new_name = new_name.split("-") # remove hyphens in first name
+    new_name = orig_firstname.split(" ")
+    if num_of_terms == 2:
+        first_term = new_name.pop(0)
+        second_term = new_name
+    elif num_of_terms == 3:
+        first_term = new_name.pop(0)
+        second_term = new_name.pop(0)
+        third_term = new_name.pop(0)
+    elif num_of_terms == 4:
+        first_term = new_name.pop(0)
+        second_term = new_name.pop(0)
+        third_term = new_name.pop(0)
+        forth_term = new_name.pop(0)
 
-       
+
+    # count number of terms, and condition on it
+    if num_of_terms >= 4:
+        if random.randint(1,4)==1:
+            new_name = second_term.lower() + " " + third_term.lower() + " " + forth_term.lower()
+            record_to_modify["G1_firstname"] = new_name
+        elif random.randint(1,4)==2:
+            new_name = first_term.lower() + " " + third_term.lower() + " " + forth_term.lower()
+            record_to_modify["G1_firstname"] = new_name
+        elif random.randint(1,4)==3:
+            new_name = first_term.lower() + " " + second_term.lower() + " " + forth_term.lower()
+            record_to_modify["G1_firstname"] = new_name
+        elif random.randint(1,4)==4:
+            new_name = first_term.lower() + " " + second_term.lower() + " " + third_term.lower()
+            record_to_modify["G1_firstname"] = new_name
+    elif num_of_terms == 3:
+        if random.randint(1,3)==1:
+            new_name = second_term.lower() + " " + third_term.lower()
+            record_to_modify["G1_firstname"] = new_name
+        elif random.randint(1,3)==2:
+            new_name = first_term.lower() + " " + third_term.lower()
+            record_to_modify["G1_firstname"] = new_name
+        elif random.randint(1,3)==3:
+            new_name = second_term.lower() + " " + third_term.lower()
+            record_to_modify["G1_firstname"] = new_name
+    elif num_of_terms == 2:
+        if random.randint(1,2)==1:
+            new_name = first_term
+            record_to_modify["G1_firstname"] = new_name
+        elif random.randint(1,2)==2:
+            new_name = second_term
+            record_to_modify["G1_firstname"] = new_name
+
     return record_to_modify
 
 
 def alspac_G1_last_name_insertion(formatted_master_record, record_to_modify):
     """insert extra term in surname"""
     
-    options = formatted_master_record["G1_surname"]
+    options = formatted_master_record['G1_surname']
     
     if options is None:
         record_to_modify["G1_surname"] = None
         return record_to_modify
     
-    lastname_orig = options[0]
-    extra = options[0]
-    
-    for n in extra:
-        n = n.lower()
-        n[-1] = random.choice(formatted_master_record["G1_surname"])
-        
-    record_to_modify["G1_surname"] = lastname_orig.lower() + " " + extra[0]
+    lastname_orig = options
+    family_name_alt_lookup = get_family_name_alternatives_lookup()
+    new_surname = random.choice(list(family_name_alt_lookup.keys()))
+      
+    record_to_modify["G1_surname"] = lastname_orig.lower() + " " + new_surname.lower()
     return record_to_modify
 
 
 def alspac_G1_last_name_deletion(formatted_master_record, record_to_modify):
     """deletion of extra term in surname"""
-    if len(formatted_master_record["G1_surname"])==1:
-        record_to_modify["G1_surname"] = formatted_master_record["G1_surname"]
-        
-    new_name = formatted_master_record["G1_surname"].split(" ")
-    new_name = new_name.split("-") # do not remove hyphens in last name
-    
-    try:
-        first_term_removed = new_name.pop(0)
-    except IndexError:
-        first_term_removed = None
-    try:
-        second_term_removed = new_name.pop(1)
-    except IndexError:
-        second_term_removed = None
-    try:
-        third_term_removed = new_name.pop(2)
-    except IndexError:
-        third_term_removed = None
-        
-    # count number of terms, and condition on it
-    if len(new_name) >= 4:
-        new_name = third_term_removed
-        record_to_modify["G1_surname"] = new_name
-    elif len(new_name) == 3:
-        new_name = second_term_removed
-        record_to_modify["G1_surname"] = new_name
-    elif len(new_name) == 2 and random.uniform(0, 1) >= 0.6:
-        new_name = first_term_removed
-        record_to_modify["G1_surname"] = new_name
-    elif len(new_name) == 2 and random.uniform(0, 1) < 0.6:
-        new_name = second_term_removed
-        record_to_modify["G1_surname"] = new_name
 
-       
+    orig_lastname = formatted_master_record['G1_surname']
+    num_of_terms = orig_lastname.count(" ") + 1
+    if num_of_terms == 0 or num_of_terms == 1:
+      record_to_modify["G1_surname"] = orig_lastname 
+        
+    
+    # new_name = new_name.split("-") # remove hyphens in first name
+    new_name = orig_lastname.split(" ")
+    if num_of_terms == 2:
+        first_term = new_name.pop(0)
+        second_term = new_name
+    elif num_of_terms == 3:
+        first_term = new_name.pop(0)
+        second_term = new_name.pop(0)
+        third_term = new_name.pop(0)
+    elif num_of_terms == 4:
+        first_term = new_name.pop(0)
+        second_term = new_name.pop(0)
+        third_term = new_name.pop(0)
+        forth_term = new_name.pop(0)
+
+
+    # count number of terms, and condition on it
+    if num_of_terms >= 4:
+        if random.randint(1,4)==1:
+            new_name = second_term.lower() + " " + third_term.lower() + " " + forth_term.lower()
+            record_to_modify["G1_surname"] = new_name
+        elif random.randint(1,4)==2:
+            new_name = first_term.lower() + " " + third_term.lower() + " " + forth_term.lower()
+            record_to_modify["G1_surname"] = new_name
+        elif random.randint(1,4)==3:
+            new_name = first_term.lower() + " " + second_term.lower() + " " + forth_term.lower()
+            record_to_modify["G1_surname"] = new_name
+        elif random.randint(1,4)==4:
+            new_name = first_term.lower() + " " + second_term.lower() + " " + third_term.lower()
+            record_to_modify["G1_surname"] = new_name
+    elif num_of_terms == 3:
+        if random.randint(1,3)==1:
+            new_name = second_term.lower() + " " + third_term.lower()
+            record_to_modify["G1_surname"] = new_name
+        elif random.randint(1,3)==2:
+            new_name = first_term.lower() + " " + third_term.lower()
+            record_to_modify["G1_surname"] = new_name
+        elif random.randint(1,3)==3:
+            new_name = first_term.lower() + " " + second_term.lower()
+            record_to_modify["G1_surname"] = new_name
+    elif num_of_terms == 2:
+        if random.randint(1,2)==1:
+            new_name = first_term
+            record_to_modify["G1_surname"] = new_name
+        elif random.randint(1,2)==2:
+            new_name = second_term
+            record_to_modify["G1_surname"] = new_name
+
     return record_to_modify
 
 def alspac_G0_last_name_insertion(formatted_master_record, record_to_modify):
@@ -644,54 +674,72 @@ def alspac_G0_last_name_insertion(formatted_master_record, record_to_modify):
         record_to_modify["G0_surname"] = None
         return record_to_modify
     
-    lastname_orig = options[0]
-    extra = options[0]
+    lastname_orig = options
+    family_name_alt_lookup = get_family_name_alternatives_lookup()
+    new_surname = random.choice(list(family_name_alt_lookup.keys()))
     
-    for n in extra:
-        n = n.lower()
-        n[-1] = random.choice(formatted_master_record["G0_surname"])
-    
-    record_to_modify["G0_surname"] = lastname_orig.lower() + " " + extra[0]
+    record_to_modify["G0_surname"] = lastname_orig.lower() + " " + new_surname.lower()
                                                 
     return record_to_modify
 
 
 def alspac_G0_last_name_deletion(formatted_master_record, record_to_modify):
     """deletion of extra term in surname"""
-    if len(formatted_master_record["G0_surname"])==1:
-        record_to_modify["G0_surname"] = formatted_master_record["G0_surname"]
-        
-    new_name = formatted_master_record["G0_surname"].split(" ")
-    new_name = new_name.split("-") # do not remove hyphens in last name
-    
-    try:
-        first_term_removed = new_name.pop(0)
-    except IndexError:
-        first_term_removed = None
-    try:
-        second_term_removed = new_name.pop(1)
-    except IndexError:
-        second_term_removed = None
-    try:
-        third_term_removed = new_name.pop(2)
-    except IndexError:
-        third_term_removed = None
-        
-    # count number of terms, and condition on it
-    if len(new_name) >= 4:
-        new_name = third_term_removed
-        record_to_modify["G0_surname"] = new_name
-    elif len(new_name) == 3:
-        new_name = second_term_removed
-        record_to_modify["G0_surname"] = new_name
-    elif len(new_name) == 2 and random.uniform(0, 1) >= 0.6:
-        new_name = first_term_removed
-        record_to_modify["G0_surname"] = new_name
-    elif len(new_name) == 2 and random.uniform(0, 1) < 0.6:
-        new_name = second_term_removed
-        record_to_modify["G0_surname"] = new_name
 
-       
+    orig_lastname = formatted_master_record['G0_surname']
+    num_of_terms = orig_lastname.count(" ") + 1
+    if num_of_terms == 0 or num_of_terms == 1:
+      record_to_modify["G0_surname"] = orig_lastname 
+        
+    
+    # new_name = new_name.split("-") # remove hyphens in first name
+    new_name = orig_lastname.split(" ")
+    if num_of_terms == 2:
+        first_term = new_name.pop(0)
+        second_term = new_name
+    elif num_of_terms == 3:
+        first_term = new_name.pop(0)
+        second_term = new_name.pop(0)
+        third_term = new_name.pop(0)
+    elif num_of_terms == 4:
+        first_term = new_name.pop(0)
+        second_term = new_name.pop(0)
+        third_term = new_name.pop(0)
+        forth_term = new_name.pop(0)
+
+
+    # count number of terms, and condition on it
+    if num_of_terms >= 4:
+        if random.randint(1,4)==1:
+            new_name = second_term.lower() + " " + third_term.lower() + " " + forth_term.lower()
+            record_to_modify["G0_surname"] = new_name
+        elif random.randint(1,4)==2:
+            new_name = first_term.lower() + " " + third_term.lower() + " " + forth_term.lower()
+            record_to_modify["G0_surname"] = new_name
+        elif random.randint(1,4)==3:
+            new_name = first_term.lower() + " " + second_term.lower() + " " +  forth_term.lower()
+            record_to_modify["G0_surname"] = new_name
+        elif random.randint(1,4)==4:
+            new_name = first_term.lower() + " " + second_term.lower() + " " + third_term.lower() 
+            record_to_modify["G0_surname"] = new_name
+    elif num_of_terms == 3:
+        if random.randint(1,3)==1:
+            new_name = second_term.lower() + " " + third_term.lower()
+            record_to_modify["G0_surname"] = new_name
+        elif random.randint(1,3)==2:
+            new_name = first_term.lower() + " " + third_term.lower()
+            record_to_modify["G0_surname"] = new_name
+        elif random.randint(1,3)==3:
+            new_name = first_term.lower() + " " + second_term.lower()
+            record_to_modify["G0_surname"] = new_name
+    elif num_of_terms == 2:
+        if random.randint(1,2)==1:
+            new_name = first_term
+            record_to_modify["G0_surname"] = new_name
+        elif random.randint(1,2)==2:
+            new_name = second_term
+            record_to_modify["G0_surname"] = new_name
+
     return record_to_modify
 
 
@@ -703,7 +751,7 @@ def alspac_first_name_typo(formatted_master_record, record_to_modify={}):
         record_to_modify["G1_firstname"] = None
         return record_to_modify
 
-    first_name = options[0]
+    first_name = options
 
     querty_corruptor = CorruptValueQuerty(
         position_function=position_mod_uniform, row_prob=0.5, col_prob=0.5
@@ -721,7 +769,7 @@ def alspac_G1_last_name_typo(formatted_master_record, record_to_modify={}):
         record_to_modify["G1_surname"] = None
         return record_to_modify
 
-    last_name = options[0]
+    last_name = options
 
     querty_corruptor = CorruptValueQuerty(
         position_function=position_mod_uniform, row_prob=0.5, col_prob=0.5
@@ -739,7 +787,7 @@ def alspac_G0_last_name_typo(formatted_master_record, record_to_modify={}):
         record_to_modify["G0_surname"] = None
         return record_to_modify
 
-    last_name = options[0]
+    last_name = options
 
     querty_corruptor = CorruptValueQuerty(
         position_function=position_mod_uniform, row_prob=0.5, col_prob=0.5
@@ -747,4 +795,14 @@ def alspac_G0_last_name_typo(formatted_master_record, record_to_modify={}):
 
     record_to_modify["G0_surname"] = querty_corruptor.corrupt_value(last_name)
 
+    return record_to_modify
+
+def alspac_name_inversion(formatted_master_record, record_to_modify):
+
+    given = formatted_master_record["G1_firstname"]
+    family = formatted_master_record["G1_surname"]
+
+    if len(given) > 0 and len(family) > 0:
+       record_to_modify["G1_firstname"] = family
+       record_to_modify["G1_surname"] = given
     return record_to_modify
