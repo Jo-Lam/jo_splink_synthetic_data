@@ -10,8 +10,8 @@ import duckdb
 
 # create path and transform .csv gold to parquet
 df = pd.read_csv('ALSPAC_syn_gold.csv')
-df.to_parquet('transformed_master_data.parquet')
-pd.read_parquet('transformed_master_data.parquet', engine='pyarrow')
+df.to_parquet('syn_alspac_to_corrupt.parquet')
+pd.read_parquet('syn_alspac_to_corrupt.parquet', engine='pyarrow')
 
 
 # This Block Introduces the corruption functions 
@@ -27,17 +27,17 @@ from corrupt.corrupt_name import (
     alspac_G1_first_name_gen_uncorrupted_record,
     alspac_G1_surname_gen_uncorrupted_record,
     alspac_G0_surname_gen_uncorrupted_record,
-    alspac_first_name_random, # 6% completely different
-    alspac_G1_surname_random, # 95% completely different 
-    alspac_G0_surname_random, # 95% completely different 
-    alspac_first_name_alternatives, # 73% alternatives
+    alspac_first_name_random, 
+    alspac_G1_surname_random, 
+    alspac_G0_surname_random, 
+    alspac_first_name_alternatives, 
     alspac_first_name_insertion,
     alspac_first_name_deletion,
     alspac_G1_last_name_insertion,
     alspac_G1_last_name_deletion,
     alspac_G0_last_name_insertion,
     alspac_G0_last_name_deletion,
-    alspac_first_name_typo, # 14% typo
+    alspac_first_name_typo, 
     alspac_name_inversion,
 )
 
@@ -68,7 +68,9 @@ from corrupt.corrupt_imd import (
 # Change File Paths: add new folder and file.
 
 output = "output"
-date = "2023_01_20"
+
+from datetime import date
+date = str(date.today())
 ALSPAC_corrupt_outpath = os.path.join(output,date) #where to deposit the corrupted data
 
 from corrupt.record_corruptor import (
@@ -89,7 +91,7 @@ con = duckdb.connect()
 
 # change path to gold.
 
-in_path = os.path.join("transformed_master_data.parquet")
+in_path = os.path.join("syn_alspac_to_corrupt.parquet")
 
 
 # Configure how corruptions will be made for each field
@@ -159,7 +161,7 @@ rc = RecordCorruptor()
 ########
 # Date of birth
 ########
-
+"""
 g1_dob_jan_first = CompositeCorruption(
     name="g1_dob_jan_first", baseline_probability=0.005
 )
@@ -180,7 +182,7 @@ rc.add_simple_corruption(
     args={"output_colname": "g1_dob"},
     baseline_probability=0.01,
 )
-
+"""
 ########
 # Name-based corruptions
 ########
@@ -471,14 +473,6 @@ rc.add_probability_adjustment(adjustment)
 adjustment = ProbabilityAdjustmentFromSQL(sql_condition, g1_lastname_random_corruption, 2.13)
 rc.add_probability_adjustment(adjustment)
 
-
-# Sex 
-
-# IMD
-
-
-
-
 name_inversion_corruption = CompositeCorruption(
     name = "alspac_name_inversion", baseline_probability= 0.05
 )
@@ -519,67 +513,48 @@ pd.options.display.max_colwidth = 1000
 
 Path(ALSPAC_corrupt_outpath).mkdir(parents=True, exist_ok=True)
 
-if __name__ == "__main__":
+out_path = os.path.join(ALSPAC_corrupt_outpath)
 
-    parser = argparse.ArgumentParser(description="data_linking job runner")
+sql = f"""
+select *
+from '{in_path}'
+"""
 
-    parser.add_argument("--start_id", type=int)
-    parser.add_argument("--num_id", type=int)
-    args = parser.parse_args()
-    start_id = args.start_id
-    num_id = args.num_id
+raw_data = con.execute(sql).df()
+records = raw_data.to_dict(orient="records")
 
-    for id in range(start_id, start_id + num_id + 1):
+output_records = []
+for i, master_input_record in enumerate(records):
 
-        out_path = os.path.join(ALSPAC_corrupt_outpath, f"{id}.parquet")
+    # Formats the input data into an easy format for producing
+    # an uncorrupted/corrupted outputs records
+    formatted_master_record = format_master_data(master_input_record, config)
 
-        if os.path.exists(out_path):
-            continue
+    uncorrupted_output_record = alspac_generate_uncorrupted_output_record(
+        formatted_master_record, config
+    )
+    uncorrupted_output_record["corruptions_applied"] = []
 
-        sql = f"""
-        select *
-        from '{in_path}'
-        where
-            random_id[1] = {id}
-        """
+    output_records.append(uncorrupted_output_record)
 
-        raw_data = con.execute(sql).df()
-        records = raw_data.to_dict(orient="records")
+    # How many corrupted records to generate
+    total_num_corrupted_records = np.random.choice(
+        zipf_dist["vals"], p=zipf_dist["weights"]
+    )
 
-        output_records = []
-        for i, master_input_record in enumerate(records):
+    for k in range(total_num_corrupted_records):
+        record_to_modify = uncorrupted_output_record.copy()
+        record_to_modify["corruptions_applied"] = []
+        record_to_modify["uncorrupted_record"] = False
+        rc.apply_probability_adjustments(uncorrupted_output_record)
+        corrupted_record = rc.apply_corruptions_to_record(
+            formatted_master_record,
+            record_to_modify,
+        )
+        output_records.append(corrupted_record)
+        print("write record number " + str(k) + "for id number " + str(i))
 
-            # Formats the input data into an easy format for producing
-            # an uncorrupted/corrupted outputs records
-            formatted_master_record = format_master_data(master_input_record, config)
+df = pd.DataFrame(output_records)
 
-            uncorrupted_output_record = alspac_generate_uncorrupted_output_record(
-                formatted_master_record, config
-            )
-            uncorrupted_output_record["corruptions_applied"] = []
-
-            output_records.append(uncorrupted_output_record)
-
-            # How many corrupted records to generate
-            total_num_corrupted_records = np.random.choice(
-                zipf_dist["vals"], p=zipf_dist["weights"]
-            )
-
-            for i in range(total_num_corrupted_records):
-                record_to_modify = uncorrupted_output_record.copy()
-                record_to_modify["corruptions_applied"] = []
-                record_to_modify["id"] = (
-                    uncorrupted_output_record["cluster"] + i+1
-                )
-                record_to_modify["uncorrupted_record"] = False
-                rc.apply_probability_adjustments(uncorrupted_output_record)
-                corrupted_record = rc.apply_corruptions_to_record(
-                    formatted_master_record,
-                    record_to_modify,
-                )
-                output_records.append(corrupted_record)
-
-        df = pd.DataFrame(output_records)
-
-        df.to_parquet(out_path, index=False)
-        print(f"written {id} with {len(df):,.0f} records")
+df.to_parquet(out_path, index=False)
+print(f"written with {len(df):,.0f} records")
