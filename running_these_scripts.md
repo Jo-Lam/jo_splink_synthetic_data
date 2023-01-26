@@ -61,46 +61,10 @@ The weights are based on the frequency of the name in the overall scraped datase
 
 ## Adding additional fields useful to the corruption process (`05_transform_raw_data.py`)
 
-## Corrupt records (`07_corrupt_records.py`)
+## Corrupt records (`06_corrupt_alspac_v2.py`)
 
-This script takes the data in `out_data/wikidata/transformed_master_data/one_row_per_person` and created duplicate records, introducing errors of various types.
+This script takes the data in you feed in and created duplicate records, introducing errors of various types. Read main repo for details.
 
-Here's an example of the raw input data - in which every value is a list of possible values:
-
-|     | human    | dod                          | family_name   | dob                          | given_name  | country_citizen | occupation                             | humanLabel         | given_nameLabel | family_nameLabel | occupationLabel                       | country_citizenLabel | sex_or_genderLabel | place_birth | birth_country | place_birthLabel | birth_countryLabel | birth_name | humanDescription                                       | name_native_language | humanAltLabel                                                                                      | residence                                             | residenceLabel                                                          | residence_countryLabel           | pseudonym | ethnicity | ethnicityLabel | full_name_arr                                                                                                              | birth_coordinates                           | residence_coordinates                                                                                                                                                                                                                                                |
-| --: | :------- | :--------------------------- | :------------ | :--------------------------- | :---------- | :-------------- | :------------------------------------- | :----------------- | :-------------- | :--------------- | :------------------------------------ | :------------------- | :----------------- | :---------- | :------------ | :--------------- | :----------------- | :--------- | :----------------------------------------------------- | :------------------- | :------------------------------------------------------------------------------------------------- | :---------------------------------------------------- | :---------------------------------------------------------------------- | :------------------------------- | :-------- | :-------- | :------------- | :------------------------------------------------------------------------------------------------------------------------- | :------------------------------------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-|   0 | Q2223137 | [datetime.date(1877, 12, 7)] | ['Q37099465'] | [datetime.date(1816, 3, 22)] | ['Q595105'] | ['Q142']        | ['Q22813352', 'Q11569986', 'Q1028181'] | ['Ernest Charton'] | ['Ernest']      | ['Charton']      | ['traveler', 'printmaker', 'painter'] | ['France']           | ['male']           | ['Q456']    | ['Q142']      | ['Lyon']         | ['France']         | []         | ['French painter active in South America (1816-1877)'] | []                   | ['e. charton, Ernest Charton de Treville, Ernest Marc Jules Charton de Treville, Ernesto Charton'] | ['Q90', 'Q456', 'Q1486', 'Q2887', 'Q33986', 'Q42810'] | ['Paris', 'Lyon', 'Buenos Aires', 'Santiago', 'Valparaíso', 'Le Havre'] | ['France', 'Argentina', 'Chile'] | []        | []        | []             | ['Ernesto Charton', 'Ernest Marc Jules Charton de Treville', 'Ernest Charton de Treville', 'e. charton', 'Ernest Charton'] | [{'lat': 45.758888888, 'lng': 4.841388888}] | [{'lat': 48.856944444, 'lng': 2.351388888}, {'lat': 45.758888888, 'lng': 4.841388888}, {'lat': -34.599722222, 'lng': -58.381944444}, {'lat': -33.45, 'lng': -70.666666666}, {'lat': -33.046111111, 'lng': -71.619722222}, {'lat': 49.494166666, 'lng': 0.108055555}] |
-
-This data is then converted into:
-
-- A single uncorrupted output record
-- One or more corrupted output records
-
-using the following process:
-
-```mermaid
-graph TD
-    Z[Single record from raw input data]
-    A[Add columns to formatted master record dict]
-    B[Add column to uncorrupted output record]
-    BB[Append final uncorrupted output record to outputs]
-    EV[Generate one or more error vectors, then for each error vector]
-    C[Add column to corrupted output record]
-    CC[Append final corrupted output record to outputs]
-    E[Output corrupted and uncorrupted records to final corrupted dataset]
-    Z --> |Formatted master record dict is initialised as the raw input data, as a dict|A
-    A --> |For each output column in config|A
-    B --> |For each output column in config|B
-    C --> |For each output column in config|C
-    A --> |Initialise blank uncorrupted record dict|B
-    A --> EV
-    EV --> |Initialise blank corrupted record dict|C
-    C --> CC
-    CC --> E
-    B --> BB
-    BB --> E
-
-```
 
 The script uses a config, which specifies, _**for each output column**_:
 
