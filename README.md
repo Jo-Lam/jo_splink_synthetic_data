@@ -1,4 +1,4 @@
-# Realistic synthetic data generation for Splink
+# Realistic synthetic data generation for ALSPAC data
 
 ## Rationale
 
